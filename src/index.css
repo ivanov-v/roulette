@@ -15,6 +15,9 @@ body {
   background: #141e30;
   background: linear-gradient(to right, #00152c, #6e7a8f);
   color: #fff;
+}
+
+.root {
   overflow-x: hidden;
 }
 

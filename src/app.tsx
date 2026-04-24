@@ -101,44 +101,46 @@ export function App() {
   };
 
   return (
-    <div className="main">
-      <h1>Кто следующий?</h1>
+    <div className="root">
+      <div className="main">
+        <h1>Кто следующий?</h1>
 
-      <div className="container">
-        <div className="list">
-          {items.map((item, index) => (
-            <div
-              className={[
-                "item",
-                index === activeIndex ? "item--active" : "",
-                mode === "done" && index === activeIndex
-                  ? "item--selected"
-                  : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              key={item}
-            >
-              {item}
-            </div>
-          ))}
+        <div className="container">
+          <div className="list">
+            {items.map((item, index) => (
+              <div
+                className={[
+                  "item",
+                  index === activeIndex ? "item--active" : "",
+                  mode === "done" && index === activeIndex
+                    ? "item--selected"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                key={item}
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+
+          <button
+            className={[
+              "active-item",
+              mode === "spinning" ? "active-item--spinning" : "",
+              mode === "done" ? "active-item--done" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={startRoulette}
+            disabled={mode === "spinning"}
+            title={mode === "done" ? "Скопировать имя" : "Запустить рулетку"}
+            type="button"
+          >
+            {activeItem}
+          </button>
         </div>
-
-        <button
-          className={[
-            "active-item",
-            mode === "spinning" ? "active-item--spinning" : "",
-            mode === "done" ? "active-item--done" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-          onClick={startRoulette}
-          disabled={mode === "spinning"}
-          title={mode === "done" ? "Скопировать имя" : "Запустить рулетку"}
-          type="button"
-        >
-          {activeItem}
-        </button>
       </div>
     </div>
   );
