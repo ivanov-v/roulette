@@ -1,147 +1,110 @@
-import { useEffect, useRef, useState } from "react";
-import items from "./data/items.json";
-
-const DEMO_INTERVAL_MS = 2000;
-const ROULETTE_DURATION_MS = 7000;
-const DONE_DURATION_MS = 4000;
-
-type RouletteMode = "demo" | "spinning" | "done";
-
-const getRandomIndex = (length: number) => Math.floor(Math.random() * length);
+import { useEffect, useState } from "react";
+import users from "./data/items.json";
 
 export function App() {
-  const [activeIndex, setActiveIndex] = useState(() =>
-    getRandomIndex(items.length),
-  );
-  const [mode, setMode] = useState<RouletteMode>("demo");
-  const intervalRef = useRef<number | null>(null);
-  const timeoutRef = useRef<number | null>(null);
-  const doneTimeoutRef = useRef<number | null>(null);
+  const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
+  const [finished, setFinished] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copying" | "leaving" | "error">("idle");
 
-  useEffect(() => {
-    if (mode !== "demo") {
-      return;
+  const copyWinner = async () => {
+    if (winnerIndex === null || !finished || copyStatus === "copying" || copyStatus === "leaving") return;
+
+    setCopyStatus("copying");
+    try {
+      await navigator.clipboard.writeText(users[winnerIndex]);
+      setCopyStatus("leaving");
+    } catch {
+      setCopyStatus("error");
     }
-
-    intervalRef.current = window.setInterval(() => {
-      setActiveIndex(getRandomIndex(items.length));
-    }, DEMO_INTERVAL_MS);
-
-    return () => {
-      if (intervalRef.current !== null) {
-        window.clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [mode]);
-
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current !== null) {
-        window.clearInterval(intervalRef.current);
-      }
-
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-      }
-
-      if (doneTimeoutRef.current !== null) {
-        window.clearTimeout(doneTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const startRoulette = () => {
-    if (mode === "spinning") {
-      return;
-    }
-
-    if (mode === "done") {
-      void copyActiveItem();
-      return;
-    }
-
-    if (intervalRef.current !== null) {
-      window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    const winnerIndex = getRandomIndex(items.length);
-    const startedAt = Date.now();
-
-    setMode("spinning");
-
-    const spin = () => {
-      const elapsed = Date.now() - startedAt;
-      const progress = Math.min(elapsed / ROULETTE_DURATION_MS, 1);
-      const delay = 60 + progress ** 2.8 * 340;
-
-      if (progress >= 1) {
-        setActiveIndex(winnerIndex);
-        setMode("done");
-        timeoutRef.current = null;
-        doneTimeoutRef.current = window.setTimeout(() => {
-          setMode("demo");
-          doneTimeoutRef.current = null;
-        }, DONE_DURATION_MS);
-        return;
-      }
-
-      setActiveIndex(getRandomIndex(items.length));
-      timeoutRef.current = window.setTimeout(spin, delay);
-    };
-
-    spin();
   };
 
-  const activeItem = items[activeIndex];
+  useEffect(() => {
+    if (winnerIndex === null) return;
 
-  const copyActiveItem = async () => {
-    await navigator.clipboard.writeText(activeItem);
-  };
+    const timeout = window.setTimeout(() => setFinished(true), 4000);
+    return () => window.clearTimeout(timeout);
+  }, [winnerIndex]);
+
+  const started = winnerIndex !== null;
 
   return (
-    <div className="root">
-      <div className="main">
-        <h1>Кто следующий?</h1>
-
-        <div className="container">
-          <div className="list">
-            {items.map((item, index) => (
-              <div
-                className={[
-                  "item",
-                  index === activeIndex ? "item--active" : "",
-                  mode === "done" && index === activeIndex
-                    ? "item--selected"
-                    : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                key={item}
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-
-          <button
-            className={[
-              "active-item",
-              mode === "spinning" ? "active-item--spinning" : "",
-              mode === "done" ? "active-item--done" : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-            onClick={startRoulette}
-            disabled={mode === "spinning"}
-            title={mode === "done" ? "Скопировать имя" : "Запустить рулетку"}
-            type="button"
+    <main>
+      <h1>Кто следующий?</h1>
+      <div className="selection-stage">
+        {!finished && (
+          <div
+            className={`users-layout${started ? " users-layout--leaving" : ""}`}
+            inert={started}
+            aria-hidden={started}
           >
-            {activeItem}
-          </button>
-        </div>
+            <button
+              className="discover-button"
+              type="button"
+              disabled={started}
+              onClick={() => setWinnerIndex(Math.floor(Math.random() * users.length))}
+            >
+              Узнать
+            </button>
+            <div className="users-marquee" tabIndex={0} aria-label="Пользователи, бегущая строка">
+              <div className="users-marquee-track">
+                {[0, 1].map((copy) => (
+                  <ul key={copy} aria-hidden={copy === 1}>
+                    {users.map((user) => (
+                      <li key={user}>{user}</li>
+                    ))}
+                  </ul>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        {started && (
+          <div className="selection-result" role="status" aria-live="polite">
+            <span className="sr-only">
+              {finished ? `Выбран: ${users[winnerIndex]}` : "Выбираем пользователя"}
+            </span>
+            <div
+              className={`rolling-window${copyStatus === "leaving" ? " rolling-window--leaving" : ""}`}
+              aria-hidden="true"
+            >
+              {finished ? (
+                <div className="rolling-name">{users[winnerIndex]}</div>
+              ) : (
+                <div className="rolling-track">
+                  {Array.from({ length: users.length * 3 + winnerIndex + 1 }, (_, index) => (
+                    <div className="rolling-name" key={index}>
+                      {users[index % users.length]}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {finished && (
+              <div
+                className={`copy-actions${copyStatus === "leaving" ? " copy-actions--leaving" : ""}`}
+                onAnimationEnd={(event) => {
+                  if (event.target !== event.currentTarget || event.animationName !== "depth-disappear") return;
+                  setWinnerIndex(null);
+                  setFinished(false);
+                  setCopyStatus("idle");
+                }}
+              >
+                <button
+                  className="discover-button discover-button--small"
+                  type="button"
+                  onClick={copyWinner}
+                  disabled={copyStatus === "copying" || copyStatus === "leaving"}
+                >
+                  Скопировать
+                </button>
+                {copyStatus === "error" && (
+                  <p>Не удалось скопировать. Попробуйте ещё раз.</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </main>
   );
 }
