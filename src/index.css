@@ -9,7 +9,9 @@ body {
 }
 
 main {
-  min-height: 100vh;
+  height: 100svh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   background: linear-gradient(to top, #000000, #152331);
 }
 
@@ -18,6 +20,109 @@ main h1 {
   text-align: center;
   margin: 0;
   padding-top: 50px;
+}
+
+.participants-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.participants-section p {
+  margin: 0;
+  text-align: center;
+}
+
+.participants-toolbar {
+  display: flex;
+  justify-content: center;
+}
+
+.secondary-button {
+  border: 1px solid #55758b;
+  border-radius: 10px;
+  padding: 10px 18px;
+  color: #fff;
+  background: #203545;
+  font: inherit;
+  cursor: pointer;
+}
+
+.secondary-button:hover {
+  background: #304c60;
+}
+
+.secondary-button:focus-visible,
+.participants-dialog textarea:focus-visible {
+  outline: 3px solid #ffd166;
+  outline-offset: 4px;
+}
+
+.participants-dialog {
+  width: min(560px, calc(100% - 32px));
+  max-height: calc(100svh - 32px);
+  padding: 28px;
+  border: 1px solid #55758b;
+  border-radius: 20px;
+  color: #fff;
+  background: #152331;
+  box-shadow: 0 20px 80px #0008;
+}
+
+.participants-dialog::backdrop {
+  background: #000a;
+}
+
+.participants-dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.participants-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.participants-heading h2,
+.participants-dialog p {
+  margin: 0;
+}
+
+.participants-dialog p {
+  color: #c4d3df;
+  line-height: 1.5;
+}
+
+.participants-dialog textarea {
+  width: 100%;
+  min-height: 160px;
+  resize: vertical;
+  border: 1px solid #55758b;
+  border-radius: 10px;
+  padding: 14px;
+  background: #0b1721;
+  color: #fff;
+  font: inherit;
+  line-height: 1.6;
+}
+
+.participants-dialog .discover-button {
+  font-size: 16px;
+  padding: 15px;
+}
+
+.participants-copy-status {
+  min-height: 24px;
+}
+
+.discover-button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .users-layout {
@@ -38,6 +143,11 @@ main h1 {
   display: flex;
   width: max-content;
   animation: marquee-scroll 40s linear infinite;
+}
+
+.users-marquee-group {
+  display: flex;
+  flex-shrink: 0;
 }
 
 .users-marquee ul {
@@ -123,7 +233,7 @@ main h1 {
 .selection-stage {
   position: relative;
   display: flex;
-  min-height: max(620px, calc(100svh - 140px));
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -131,12 +241,12 @@ main h1 {
   pointer-events: none;
 }
 
-.users-layout > .users-marquee,
+.users-layout > .participants-section,
 .users-layout > .discover-button {
   animation: depth-appear 650ms ease-out both;
 }
 
-.users-layout--leaving > .users-marquee,
+.users-layout--leaving > .participants-section,
 .users-layout--leaving > .discover-button {
   animation: depth-disappear 450ms ease-in forwards;
 }
@@ -225,6 +335,7 @@ main h1 {
   .users-marquee-track {
     animation: none;
   }
+  .users-marquee-group[aria-hidden="true"],
   .users-marquee ul[aria-hidden="true"] {
     display: none;
   }
@@ -232,7 +343,7 @@ main h1 {
   .copy-actions,
   .rolling-window--leaving,
   .selection-result,
-  .users-layout > .users-marquee,
+  .users-layout > .participants-section,
   .users-layout > .discover-button {
     animation-duration: 1ms;
   }

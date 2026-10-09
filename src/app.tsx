@@ -1,35 +1,41 @@
-import { useEffect, useState } from "react";
-import users from "./data/items.json";
+import { useGate, useUnit } from "effector-react";
+import { ParticipantsDialog } from "./participants-dialog";
+import { ParticipantsMarquee } from "./participants-marquee";
+import {
+  AppGate,
+  $participants,
+  $participantsOpen,
+  $winnerIndex,
+  $winner,
+  $started,
+  $finished,
+  $winnerCopyStatus,
+  participantsOpened,
+  selectClicked,
+  copyWinnerClicked,
+  resultHidden,
+} from "./model";
 
 export function App() {
-  const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
-  const [finished, setFinished] = useState(false);
-  const [copyStatus, setCopyStatus] = useState<"idle" | "copying" | "leaving" | "error">("idle");
-
-  const copyWinner = async () => {
-    if (winnerIndex === null || !finished || copyStatus === "copying" || copyStatus === "leaving") return;
-
-    setCopyStatus("copying");
-    try {
-      await navigator.clipboard.writeText(users[winnerIndex]);
-      setCopyStatus("leaving");
-    } catch {
-      setCopyStatus("error");
-    }
-  };
-
-  useEffect(() => {
-    if (winnerIndex === null) return;
-
-    const timeout = window.setTimeout(() => setFinished(true), 4000);
-    return () => window.clearTimeout(timeout);
-  }, [winnerIndex]);
-
-  const started = winnerIndex !== null;
+  useGate(AppGate);
+  const { users, participantsOpen, winnerIndex, winner, started, finished, copyStatus, openParticipants, select, copyWinner, hideResult } = useUnit({
+    users: $participants,
+    participantsOpen: $participantsOpen,
+    winnerIndex: $winnerIndex,
+    winner: $winner,
+    started: $started,
+    finished: $finished,
+    copyStatus: $winnerCopyStatus,
+    openParticipants: participantsOpened,
+    select: selectClicked,
+    copyWinner: copyWinnerClicked,
+    hideResult: resultHidden,
+  });
 
   return (
     <main>
       <h1>Кто следующий?</h1>
+      {participantsOpen && <ParticipantsDialog />}
       <div className="selection-stage">
         {!finished && (
           <div
@@ -40,35 +46,31 @@ export function App() {
             <button
               className="discover-button"
               type="button"
-              disabled={started}
-              onClick={() => setWinnerIndex(Math.floor(Math.random() * users.length))}
+              disabled={started || users.length === 0}
+              onClick={select}
             >
               Узнать
             </button>
-            <div className="users-marquee" tabIndex={0} aria-label="Пользователи, бегущая строка">
-              <div className="users-marquee-track">
-                {[0, 1].map((copy) => (
-                  <ul key={copy} aria-hidden={copy === 1}>
-                    {users.map((user) => (
-                      <li key={user}>{user}</li>
-                    ))}
-                  </ul>
-                ))}
+            <div className="participants-section">
+              <ParticipantsMarquee participants={users} />
+              <div className="participants-toolbar">
+                <button className="secondary-button" type="button" onClick={openParticipants}>Участники · {users.length}</button>
               </div>
+              {users.length === 0 && <p>Добавьте участников, чтобы начать выбор.</p>}
             </div>
           </div>
         )}
-        {started && (
+        {winnerIndex !== null && (
           <div className="selection-result" role="status" aria-live="polite">
             <span className="sr-only">
-              {finished ? `Выбран: ${users[winnerIndex]}` : "Выбираем пользователя"}
+              {finished ? `Выбран: ${winner}` : "Выбираем пользователя"}
             </span>
             <div
               className={`rolling-window${copyStatus === "leaving" ? " rolling-window--leaving" : ""}`}
               aria-hidden="true"
             >
               {finished ? (
-                <div className="rolling-name">{users[winnerIndex]}</div>
+                <div className="rolling-name">{winner}</div>
               ) : (
                 <div className="rolling-track">
                   {Array.from({ length: users.length * 3 + winnerIndex + 1 }, (_, index) => (
@@ -84,9 +86,7 @@ export function App() {
                 className={`copy-actions${copyStatus === "leaving" ? " copy-actions--leaving" : ""}`}
                 onAnimationEnd={(event) => {
                   if (event.target !== event.currentTarget || event.animationName !== "depth-disappear") return;
-                  setWinnerIndex(null);
-                  setFinished(false);
-                  setCopyStatus("idle");
+                  hideResult();
                 }}
               >
                 <button
