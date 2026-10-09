@@ -1,6 +1,5 @@
 import { useGate, useUnit } from "effector-react";
 import { ParticipantsDialog } from "./participants-dialog";
-import { ParticipantsMarquee } from "./participants-marquee";
 import {
   AppGate,
   $participants,
@@ -52,7 +51,6 @@ export function App() {
               Узнать
             </button>
             <div className="participants-section">
-              <ParticipantsMarquee participants={users} />
               <div className="participants-toolbar">
                 <button className="secondary-button" type="button" onClick={openParticipants}>Участники · {users.length}</button>
               </div>

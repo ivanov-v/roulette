@@ -134,45 +134,6 @@ main h1 {
   width: 100%;
 }
 
-.users-marquee {
-  width: 100%;
-  overflow: hidden;
-}
-
-.users-marquee-track {
-  display: flex;
-  width: max-content;
-  animation: marquee-scroll 40s linear infinite;
-}
-
-.users-marquee-group {
-  display: flex;
-  flex-shrink: 0;
-}
-
-.users-marquee ul {
-  display: flex;
-  flex-shrink: 0;
-  gap: 48px;
-  margin: 0;
-  padding: 0 48px 0 0;
-  list-style: none;
-  font-size: 30px;
-  font-weight: 300;
-  white-space: nowrap;
-}
-
-.users-marquee:hover .users-marquee-track,
-.users-marquee:focus .users-marquee-track {
-  animation-play-state: paused;
-}
-
-@keyframes marquee-scroll {
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 .discover-button {
   background-image: linear-gradient(
     to right,
@@ -329,17 +290,6 @@ main h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .users-marquee {
-    overflow-x: auto;
-  }
-  .users-marquee-track {
-    animation: none;
-  }
-  .users-marquee-group[aria-hidden="true"],
-  .users-marquee ul[aria-hidden="true"] {
-    display: none;
-  }
-
   .copy-actions,
   .rolling-window--leaving,
   .selection-result,
