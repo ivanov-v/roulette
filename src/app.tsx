@@ -63,6 +63,18 @@ export function App() {
             <span className="sr-only">
               {finished ? `Выбран: ${winner}` : "Выбираем пользователя"}
             </span>
+            {finished && (
+              <div className={`result-discover${copyStatus === "leaving" ? " result-discover--leaving" : ""}`}>
+                <button
+                  className="discover-button"
+                  type="button"
+                  onClick={select}
+                  disabled={copyStatus === "copying" || copyStatus === "leaving"}
+                >
+                  Узнать ещё
+                </button>
+              </div>
+            )}
             <div
               className={`rolling-window${copyStatus === "leaving" ? " rolling-window--leaving" : ""}`}
               aria-hidden="true"
@@ -88,7 +100,7 @@ export function App() {
                 }}
               >
                 <button
-                  className="discover-button discover-button--small"
+                  className="secondary-button"
                   type="button"
                   onClick={copyWinner}
                   disabled={copyStatus === "copying" || copyStatus === "leaving"}

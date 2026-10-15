@@ -106,6 +106,36 @@ test("an empty list cannot start selection", async () => {
   assert.equal(scope.getState($finished), false);
 });
 
+test("a completed selection can spin again and ignores clicks while spinning", async () => {
+  const nextSelection = Promise.withResolvers<number>();
+  let selections = 0;
+  let nextVersion = -1;
+  const scope = fork({ handlers: [
+    [saveParticipantsFx, () => {}],
+    [chooseWinnerFx, ({ version }) => ({ index: selections++, version })],
+    [waitForSelectionFx, (version) => {
+      if (selections === 1) return Promise.resolve(version);
+      nextVersion = version;
+      return nextSelection.promise;
+    }],
+  ] });
+  await allSettled(participantsChanged, { scope, params: "Анна\nБорис" });
+  await allSettled(selectClicked, { scope });
+  assert.equal(scope.getState($finished), true);
+  assert.equal(scope.getState($winnerIndex), 0);
+
+  const spinning = allSettled(selectClicked, { scope });
+  assert.equal(scope.getState($finished), false);
+  assert.equal(scope.getState($winnerIndex), 1);
+  scopeBind(selectClicked, { scope })();
+  assert.equal(selections, 2);
+
+  nextSelection.resolve(nextVersion);
+  await spinning;
+  assert.equal(scope.getState($finished), true);
+  assert.equal(scope.getState($winnerIndex), 1);
+});
+
 test("a completed selection copies its winner, then resets after the disappearance", async () => {
   let copied = "";
   const copyScope = fork({ handlers: [

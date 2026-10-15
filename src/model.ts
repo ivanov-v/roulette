@@ -89,11 +89,12 @@ sample({ clock: participantsChanged, source: $participants, target: saveParticip
 sample({ clock: [participantsChanged, participantsRestored, resultHidden], target: selectionReset });
 
 createAction(selectClicked, {
-  source: { $participants, $started, $selectionVersion },
-  target: { chooseWinnerFx },
-  fn: (target, { participants, started, selectionVersion }) => {
-    if (participants.length === 0 || started) return;
-    target.chooseWinnerFx({ count: participants.length, version: selectionVersion });
+  source: { $participants, $started, $finished, $winnerCopyStatus, $selectionVersion },
+  target: { selectionReset, chooseWinnerFx },
+  fn: (target, { participants, started, finished, winnerCopyStatus, selectionVersion }) => {
+    if (participants.length === 0 || (started && !finished) || winnerCopyStatus === "copying" || winnerCopyStatus === "leaving") return;
+    target.selectionReset();
+    target.chooseWinnerFx({ count: participants.length, version: selectionVersion + 1 });
   },
 });
 createAction(chooseWinnerFx.doneData, {
