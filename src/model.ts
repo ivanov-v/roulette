@@ -47,6 +47,8 @@ export const copyUrlFx = createEffect(async ({ participants }: { participants: s
 
 export const $winnerIndex = createStore<number | null>(null)
   .reset(selectionReset);
+export const $rollingStartIndex = createStore(0)
+  .reset([participantsChanged, participantsRestored, resultHidden]);
 export const $started = $winnerIndex.map((index) => index !== null);
 export const $finished = createStore(false).reset(selectionReset);
 export const $winner = combine($participants, $winnerIndex, (participants, index) => index === null ? null : participants[index] ?? null);
@@ -89,11 +91,12 @@ sample({ clock: participantsChanged, source: $participants, target: saveParticip
 sample({ clock: [participantsChanged, participantsRestored, resultHidden], target: selectionReset });
 
 createAction(selectClicked, {
-  source: { $participants, $started, $finished, $winnerCopyStatus, $selectionVersion },
-  target: { selectionReset, chooseWinnerFx },
-  fn: (target, { participants, started, finished, winnerCopyStatus, selectionVersion }) => {
+  source: { $participants, $winnerIndex, $started, $finished, $winnerCopyStatus, $selectionVersion },
+  target: { selectionReset, $rollingStartIndex, chooseWinnerFx },
+  fn: (target, { participants, winnerIndex, started, finished, winnerCopyStatus, selectionVersion }) => {
     if (participants.length === 0 || (started && !finished) || winnerCopyStatus === "copying" || winnerCopyStatus === "leaving") return;
     target.selectionReset();
+    target.$rollingStartIndex(winnerIndex ?? 0);
     target.chooseWinnerFx({ count: participants.length, version: selectionVersion + 1 });
   },
 });

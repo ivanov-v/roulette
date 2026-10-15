@@ -5,6 +5,7 @@ import {
   $participants,
   $participantsOpen,
   $winnerIndex,
+  $rollingStartIndex,
   $winner,
   $started,
   $finished,
@@ -17,10 +18,11 @@ import {
 
 export function App() {
   useGate(AppGate);
-  const { users, participantsOpen, winnerIndex, winner, started, finished, copyStatus, openParticipants, select, copyWinner, hideResult } = useUnit({
+  const { users, participantsOpen, winnerIndex, rollingStartIndex, winner, started, finished, copyStatus, openParticipants, select, copyWinner, hideResult } = useUnit({
     users: $participants,
     participantsOpen: $participantsOpen,
     winnerIndex: $winnerIndex,
+    rollingStartIndex: $rollingStartIndex,
     winner: $winner,
     started: $started,
     finished: $finished,
@@ -36,45 +38,45 @@ export function App() {
       <h1>Кто следующий?</h1>
       {participantsOpen && <ParticipantsDialog />}
       <div className="selection-stage">
-        {!finished && (
-          <div
-            className={`users-layout${started ? " users-layout--leaving" : ""}`}
-            inert={started}
-            aria-hidden={started}
+        <div
+          className={`users-layout${started ? " users-layout--leaving" : ""}`}
+          inert={started}
+          aria-hidden={started}
+        >
+          <button
+            className="discover-button"
+            type="button"
+            disabled={started || users.length === 0}
+            onClick={select}
           >
-            <button
-              className="discover-button"
-              type="button"
-              disabled={started || users.length === 0}
-              onClick={select}
-            >
-              Узнать
-            </button>
-            <div className="participants-section">
-              <div className="participants-toolbar">
-                <button className="secondary-button" type="button" onClick={openParticipants}>Участники · {users.length}</button>
-              </div>
-              {users.length === 0 && <p>Добавьте участников, чтобы начать выбор.</p>}
+            Узнать
+          </button>
+          <div className="participants-section">
+            <div className="participants-toolbar">
+              <button className="secondary-button" type="button" onClick={openParticipants}>Участники · {users.length}</button>
             </div>
+            {users.length === 0 && <p>Добавьте участников, чтобы начать выбор.</p>}
           </div>
-        )}
+        </div>
         {winnerIndex !== null && (
           <div className="selection-result" role="status" aria-live="polite">
             <span className="sr-only">
               {finished ? `Выбран: ${winner}` : "Выбираем пользователя"}
             </span>
-            {finished && (
-              <div className={`result-discover${copyStatus === "leaving" ? " result-discover--leaving" : ""}`}>
-                <button
-                  className="discover-button"
-                  type="button"
-                  onClick={select}
-                  disabled={copyStatus === "copying" || copyStatus === "leaving"}
-                >
-                  Узнать ещё
-                </button>
-              </div>
-            )}
+            <div
+              className={`result-discover${finished && copyStatus !== "leaving" ? " result-discover--visible" : ""}`}
+              inert={!finished || copyStatus === "leaving"}
+              aria-hidden={!finished || copyStatus === "leaving"}
+            >
+              <button
+                className="discover-button"
+                type="button"
+                onClick={select}
+                disabled={!finished || copyStatus === "copying" || copyStatus === "leaving"}
+              >
+                Узнать ещё
+              </button>
+            </div>
             <div
               className={`rolling-window${copyStatus === "leaving" ? " rolling-window--leaving" : ""}`}
               aria-hidden="true"
@@ -83,9 +85,9 @@ export function App() {
                 <div className="rolling-name">{winner}</div>
               ) : (
                 <div className="rolling-track">
-                  {Array.from({ length: users.length * 3 + winnerIndex + 1 }, (_, index) => (
+                  {Array.from({ length: users.length * 3 + (winnerIndex - rollingStartIndex + users.length) % users.length + 1 }, (_, index) => (
                     <div className="rolling-name" key={index}>
-                      {users[index % users.length]}
+                      {users[(rollingStartIndex + index) % users.length]}
                     </div>
                   ))}
                 </div>

@@ -190,10 +190,24 @@ main h1 {
 
 .result-discover {
   top: auto;
-  bottom: calc(50% + var(--row-height) / 2 + 20px);
+  bottom: calc(50% + var(--row-height) / 2 + 60px);
+  animation: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: perspective(900px) translateZ(-600px) scale(0.6);
+  transition: opacity 350ms ease-in, transform 350ms ease-in, visibility 350ms;
 }
 
-.result-discover--leaving,
+.result-discover--visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: perspective(900px) translateZ(0) scale(1);
+  transition-duration: 500ms;
+  transition-timing-function: ease-out;
+}
+
 .copy-actions--leaving,
 .rolling-window--leaving {
   pointer-events: none;
@@ -299,7 +313,10 @@ main h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .result-discover,
+  .result-discover {
+    transition-duration: 1ms;
+  }
+
   .copy-actions,
   .rolling-window--leaving,
   .selection-result,
